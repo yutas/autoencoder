@@ -24,15 +24,15 @@ patches = zeros(patchsize*patchsize, numpatches);
 %  patch corresponding to the pixels in the block (21,21) to (30,30) of
 %  Image 1
 
-res = 512;
+resolution = 512;
 image_number = round(rand()*10);
-max_idx = res-patchsize+1;
+max_idx = resolution-patchsize+1;
 
-indexes = randi([0,res^2-1],numpatches,1);%round(rand([numpatches, 1])*(res^2));
+indexes = randi([0,resolution^2-1],numpatches,1);%round(rand([numpatches, 1])*(res^2));
 for n = 1:numpatches
         idx = indexes(n);
-        x = mod(idx, res);
-        y = floor(idx/res);
+        x = mod(idx, resolution);
+        y = floor(idx/resolution);
         x=x+1;
         y=y+1;
         if (x > max_idx)

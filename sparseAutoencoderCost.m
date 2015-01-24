@@ -1,4 +1,4 @@
-function [cost,grad] = sparseAutoencoderCost(theta, visibleSize, hiddenSize, ...
+function [cost, grad, p] = sparseAutoencoderCost(theta, visibleSize, hiddenSize, ...
                                              lambda, sparsityParam, beta, data)
 
 % visibleSize: the number of input units (probably 64) 
@@ -20,9 +20,6 @@ b2 = theta(2*hiddenSize*visibleSize+hiddenSize+1:end);
 
 % Cost and gradient variables (your code needs to compute these values). 
 % Here, we initialize them to zeros. 
-cost = 0;
-W1grad = zeros(size(W1)); 
-W2grad = zeros(size(W2));
 b1grad = zeros(size(b1)); 
 b2grad = zeros(size(b2));
 
@@ -43,44 +40,51 @@ b2grad = zeros(size(b2));
 % 
 
 m = size(data,2);
-p = zeros(hiddenSize,1);
-
-%z2 = W1*data + repmat(b1,1,m);
-%a2 = sigmoid(z2);
-%z3 = W2 * a2 + repmat(b2,1,m);
-%h = sigmoid(z3);
-
-for k=1:m
-    a1 = data(:, k);    % 64x1
-    z2 = W1*a1 + b1;
-    a2 = sigmoid(z2);   % 25x1
-    z3 = W2*a2 + b2;
-    h = sigmoid(z3);
-    p = p + a2;
-
-    cost = cost + sum((h-data(:,k)).^2);
-
-    d3 = (h - data(:,k)) .* sigmoidGradient(z3);                 % 64x1
-     d2 = (W2'*d3 + beta*(-sparsityParam./a2+(1-sparsityParam)./(1-a2))) .* sigmoidGradient(z2);  % 25x1
-%     d2 = W2'*d3 .* sigmoidGradient(z2);
-
-    W1grad = W1grad + d2 * a1';
-    b1grad = b1grad + d2;
-    W2grad = W2grad + d3 * a2';
-    b2grad = b2grad + d3;
-end;
 
 
-cost = 1/(2*m) * cost + ...
+[h, p, z2, a2, z3] = forwardPropagation(W1, W2, b1, b2, data);
+cost = 1/(2*m) * sum(sum((h-data).^2)) + ...
         lambda/2 * (sum(sum(W1 .^ 2)) + sum(sum(W2 .^ 2))) + ...
-        beta*KLDivergence(sparsityParam, p/m);
+        beta*KLDivergence(sparsityParam, p);
+delta3 = (h-data) .* sigmoidGradient(z3);
+p_all = repmat(p,1,m);
+delta2 = (W2'*delta3 + beta*(-sparsityParam./p_all+(1-sparsityParam)./(1-p_all))) .* sigmoidGradient(z2);
 
-W1grad = W1grad ./ m + lambda * W1;
-W2grad = W2grad ./ m + lambda * W2;
-% W1grad = W1grad ./ m;
-% W2grad = W2grad ./ m;
-b1grad = b1grad ./ m;
-b2grad = b2grad ./ m;
+W1grad = (delta2 * data') ./ m + lambda * W1;
+b1grad = (b1grad + sum(delta2, 2)) ./ m;
+W2grad = (delta3 * a2') ./ m + lambda * W2;
+b2grad = b2grad + sum(delta3, 2);
+
+
+% for k=1:m
+%     a1 = data(:, k);    % 64x1
+%     [h, z2, a2, z3] = forwardPropagation(W1, W2, b1, b2, a1);
+%     p = p + a2;
+% 
+%     cost = cost + sum((h-data(:,k)).^2);
+% 
+%     d3 = (h - data(:,k)) .* sigmoidGradient(z3);                 % 64x1
+%     d2 = (W2'*d3 + beta*(-sparsityParam./a2+(1-sparsityParam)./(1-a2))) .* sigmoidGradient(z2);  % 25x1
+% 
+% 
+%     W1grad = W1grad + d2 * a1';
+%     b1grad = b1grad + d2;
+%     W2grad = W2grad + d3 * a2';
+%     b2grad = b2grad + d3;
+% end;
+% 
+% 
+% cost = 1/(2*m) * cost + ...
+%         lambda/2 * (sum(sum(W1 .^ 2)) + sum(sum(W2 .^ 2))) + ...
+%         beta*KLDivergence(sparsityParam, p/m);
+% 
+% W1grad = W1grad ./ m + lambda * W1;
+% W2grad = W2grad ./ m + lambda * W2;
+% b1grad = b1grad ./ m;
+% b2grad = b2grad ./ m;
+
+% fprintf('Error between W1grad is %d\n', sum(sum(W1grad-W1grad1).^2))
+% fprintf('Error between W2grad is %d\n', sum(sum(W2grad-W2grad1).^2))
 
 %-------------------------------------------------------------------
 % After computing the cost and gradient, we will convert the gradients back
