@@ -26,21 +26,25 @@ patches = zeros(patchsize*patchsize, numpatches);
 
 resolution = 512;
 image_number = round(rand()*10);
-max_idx = resolution-patchsize+1;
-
-indexes = randi([0,resolution^2-1],numpatches,1);%round(rand([numpatches, 1])*(res^2));
+% max_idx = resolution-patchsize+1;
+% imagesc(IMAGES(:,:,image_number)), colormap gray;
+% indexes = randi([0,resolution^2-1],numpatches,1);%round(rand([numpatches, 1])*(res^2));
+indexes_x = randi([1,resolution-patchsize],numpatches,1);
+indexes_y = randi([1,resolution-patchsize],numpatches,1);
 for n = 1:numpatches
-        idx = indexes(n);
-        x = mod(idx, resolution);
-        y = floor(idx/resolution);
-        x=x+1;
-        y=y+1;
-        if (x > max_idx)
-            x = max_idx;
-        end
-        if (y > max_idx)
-            y = max_idx;
-        end
+%         idx = indexes(n);
+        x = indexes_x(n);
+        y = indexes_y(n);
+%         x = mod(idx, resolution);
+%         y = floor(idx/resolution);
+%         x=x+1;
+%         y=y+1;
+%         if (x > max_idx)
+%             x = max_idx;
+%         end
+%         if (y > max_idx)
+%             y = max_idx;
+%         end
         %fprintf('X = %d, Y = %d\n',x,y);
         patches(:, n) = reshape(IMAGES(x:x+patchsize-1,y:y+patchsize-1,image_number), patchsize*patchsize, 1);
 end

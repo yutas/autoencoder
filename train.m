@@ -122,11 +122,12 @@ options.Method = 'lbfgs'; % Here, we use L-BFGS to optimize our cost
                           % function value and the gradient. In our problem,
                           % sparseAutoencoderCost.m satisfies this.
 options.maxIter = 400;	  % Maximum number of iterations of L-BFGS to run 
-options.display = 'on';
+options.display = 'off';
 
-lambdas = [0.0001; 3e-4; 1e-3; 3e-3; 1e-2; 3e-2; 1e-1; 3e-1; 1; 3; 10];
-betas = [0.01; 0.03; 0.1; 0.3; 1; 3; 10];
-beta = 1;
+% lambdas = [0.0001; 3e-4; 1e-3; 3e-3; 1e-2; 3e-2; 1e-1; 3e-1; 1; 3; 10];
+% betas = [0.01; 0.03; 0.1; 0.3; 1; 3; 10];
+lambdas = 1e-2;
+betas = 1;
 points_number = size(lambdas,1)*size(betas,1);
 % points_number = size(lambdas,1);
 errors = zeros(points_number, 1);
@@ -165,13 +166,14 @@ for k=1:size(lambdas)
     end
 end
 
-% plot(lambdas, errors);
-% return
-
 %%======================================================================
 %% STEP 5: Visualization 
 [min_error, idxe] = min(errors);
-[min_p, point] = min(sum(ps,2));
+% plot(points(:,1),errors);
+ps_sums = sum(ps,2);
+% figure
+% plot(points(:,2),ps_sums);
+[min_p, point] = min(ps_sums);
 best_lambda = points(point, 1);
 best_beta = points(point, 2);
 fprintf('Using model with best lambda = %d and beta = %d\n', best_lambda, best_beta);
@@ -184,6 +186,7 @@ b2 = model(2*hiddenSize*visibleSize+hiddenSize+1:end);
 
 [h, p] = forwardPropagation(W1, W2, b1, b2, test_data);
 W1 = reshape(model(1:hiddenSize*visibleSize), hiddenSize, visibleSize);
+% figure
 display_network(W1', 12); 
 
 print -djpeg weights.jpg   % save the visualization to a file
